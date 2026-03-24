@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Prova</title>
+
+<style>
+body {
+    font-family: Arial;
+    padding:20px;
+}
+
+h2 {
+    color:#0f172a;
+}
+
+button {
+    padding:10px;
+    background:#0f172a;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Prova de Conhecimento</h2>
+
+<form id="formProva">
+
+<p>1. Qual a capital do Brasil?</p>
+<input type="radio" name="q1" value="errado"> São Paulo<br>
+<input type="radio" name="q1" value="certo"> Brasília<br>
+<input type="radio" name="q1" value="errado"> Rio de Janeiro<br>
+
+<br>
+
+<p>2. 2 + 2 = ?</p>
+<input type="radio" name="q2" value="errado"> 3<br>
+<input type="radio" name="q2" value="certo"> 4<br>
+<input type="radio" name="q2" value="errado"> 5<br>
+
+<br><br>
+
+<button type="button" onclick="finalizar()">Finalizar Prova</button>
+
+</form>
+
+<script>
+function finalizar(){
+    let pontos = 0;
+
+    let q1 = document.querySelector('input[name="q1"]:checked');
+    let q2 = document.querySelector('input[name="q2"]:checked');
+
+    if(q1 && q1.value === "certo") pontos++;
+    if(q2 && q2.value === "certo") pontos++;
+
+    alert("Sua nota: " + pontos);
+
+    // Redireciona para tela final
+    window.top.location.href = "final.html";
+}
+</script>
+
+</body>
+</html>
