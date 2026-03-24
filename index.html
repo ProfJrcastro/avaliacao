@@ -19,10 +19,16 @@ body {
     justify-content:space-between;
 }
 
-iframe {
-    width:100%;
-    height:90vh;
+#prova {
+    padding:20px;
+}
+
+button {
+    padding:10px;
+    background:#0f172a;
+    color:white;
     border:none;
+    cursor:pointer;
 }
 </style>
 </head>
@@ -34,12 +40,31 @@ iframe {
     <span id="alertas">Saídas: 0</span>
 </div>
 
-<!-- 🔥 CARREGA A PROVA LOCAL (SEM ERRO 404) -->
-<iframe src="prova.html"></iframe>
+<div id="prova">
+
+<h2>Prova</h2>
+
+<p>1. Capital do Brasil?</p>
+<input type="radio" name="q1" value="errado"> São Paulo<br>
+<input type="radio" name="q1" value="certo"> Brasília<br>
+<input type="radio" name="q1" value="errado"> Rio<br>
+
+<br>
+
+<p>2. 2 + 2 = ?</p>
+<input type="radio" name="q2" value="errado"> 3<br>
+<input type="radio" name="q2" value="certo"> 4<br>
+<input type="radio" name="q2" value="errado"> 5<br>
+
+<br><br>
+
+<button onclick="finalizar()">Finalizar</button>
+
+</div>
 
 <script>
-let saidas = 0;
 let tempo = 600;
+let saidas = 0;
 let bloqueio = false;
 
 // ⏱ TIMER
@@ -48,8 +73,7 @@ setInterval(()=>{
     document.getElementById('tempo').innerText = "Tempo: " + tempo + "s";
 
     if(tempo <= 0){
-        alert("Tempo encerrado!");
-        window.location.href = "final.html";
+        encerrar("Tempo encerrado!");
     }
 },1000);
 
@@ -62,7 +86,7 @@ document.addEventListener('keydown', function(e) {
     if (e.ctrlKey) e.preventDefault();
 });
 
-// 👀 MONITORAMENTO
+// 👀 DETECÇÃO DE SAÍDA
 document.addEventListener("visibilitychange", function() {
     if (document.hidden && !bloqueio) penalizar();
 });
@@ -71,6 +95,7 @@ window.onblur = function(){
     if(!bloqueio) penalizar();
 };
 
+// ⚠️ PENALIZAÇÃO
 function penalizar(){
     bloqueio = true;
 
@@ -79,12 +104,32 @@ function penalizar(){
 
     alert("Você saiu da prova!");
 
-    if(saidas >= 2){
-        alert("Prova encerrada!");
-        window.location.href = "final.html";
+    if(saidas >= 1){
+        encerrar("Prova reiniciada por saída!");
     }
 
-    setTimeout(() => bloqueio = false, 2000);
+    setTimeout(()=> bloqueio = false, 2000);
+}
+
+// 🔚 FINALIZAÇÃO
+function finalizar(){
+    let pontos = 0;
+
+    let q1 = document.querySelector('input[name="q1"]:checked');
+    let q2 = document.querySelector('input[name="q2"]:checked');
+
+    if(q1 && q1.value === "certo") pontos++;
+    if(q2 && q2.value === "certo") pontos++;
+
+    alert("Sua nota: " + pontos);
+
+    encerrar("Prova finalizada!");
+}
+
+// 🔄 RESET TOTAL (SEM 404)
+function encerrar(msg){
+    alert(msg);
+    location.reload(); // aqui funciona corretamente pois não muda rota
 }
 </script>
 
