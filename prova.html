@@ -2,67 +2,211 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Prova</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-    font-family: Arial;
-    padding:20px;
+body { font-family: Arial; margin:0; background:#0f172a; color:white; }
+
+.topbar {
+    background:#111827;
+    padding:10px;
+    display:flex;
+    justify-content:space-between;
 }
 
-h2 {
-    color:#0f172a;
-}
+#prova, #admin { padding:20px; }
 
 button {
-    padding:10px;
-    background:#0f172a;
-    color:white;
-    border:none;
+    padding:8px;
+    margin-top:5px;
     cursor:pointer;
+}
+
+input { margin:5px 0; }
+
+.hidden { display:none; }
+
+.card {
+    background:#1e293b;
+    padding:10px;
+    margin:10px 0;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Prova de Conhecimento</h2>
+<div class="topbar">
+    <span id="tempo">Tempo: 600s</span>
+    <span id="alertas">Saídas: 0</span>
+    <button onclick="abrirAdmin()">Admin</button>
+</div>
 
-<form id="formProva">
+<!-- PROVA -->
+<div id="prova"></div>
 
-<p>1. Qual a capital do Brasil?</p>
-<input type="radio" name="q1" value="errado"> São Paulo<br>
-<input type="radio" name="q1" value="certo"> Brasília<br>
-<input type="radio" name="q1" value="errado"> Rio de Janeiro<br>
+<!-- ADMIN -->
+<div id="admin" class="hidden">
+    <h2>Painel do Professor</h2>
 
-<br>
+    <input id="pergunta" placeholder="Pergunta"><br>
+    <input id="a" placeholder="Alternativa A"><br>
+    <input id="b" placeholder="Alternativa B"><br>
+    <input id="c" placeholder="Alternativa C"><br>
+    <input id="correta" placeholder="Resposta correta (A, B ou C)"><br>
 
-<p>2. 2 + 2 = ?</p>
-<input type="radio" name="q2" value="errado"> 3<br>
-<input type="radio" name="q2" value="certo"> 4<br>
-<input type="radio" name="q2" value="errado"> 5<br>
+    <button onclick="addQuestao()">Adicionar</button>
 
-<br><br>
+    <h3>Questões cadastradas</h3>
+    <div id="listaQuestoes"></div>
 
-<button type="button" onclick="finalizar()">Finalizar Prova</button>
-
-</form>
+    <h3>Respostas</h3>
+    <button onclick="verRespostas()">Ver respostas</button>
+    <div id="respostas"></div>
+</div>
 
 <script>
+let tempo = 600;
+let saidas = 0;
+let bloqueio = false;
+
+// 🔥 BANCO LOCAL
+let questoes = JSON.parse(localStorage.getItem("questoes")) || [];
+let respostasSalvas = JSON.parse(localStorage.getItem("respostas")) || [];
+
+// ⏱ TIMER
+setInterval(()=>{
+    tempo--;
+    document.getElementById('tempo').innerText = "Tempo: " + tempo + "s";
+
+    if(tempo <= 0){
+        encerrar("Tempo encerrado!");
+    }
+},1000);
+
+// 👀 SAÍDA
+document.addEventListener("visibilitychange", ()=>{
+    if(document.hidden && !bloqueio) penalizar();
+});
+
+window.onblur = ()=>{ if(!bloqueio) penalizar(); };
+
+function penalizar(){
+    bloqueio = true;
+    saidas++;
+    document.getElementById("alertas").innerText = "Saídas: " + saidas;
+
+    alert("Você saiu da prova!");
+
+    if(saidas >= 1){
+        encerrar("Prova reiniciada!");
+    }
+
+    setTimeout(()=> bloqueio = false, 2000);
+}
+
+// 🔄 ENCERRAR
+function encerrar(msg){
+    alert(msg);
+    location.reload();
+}
+
+// 🎯 GERAR PROVA
+function carregarProva(){
+    let html = "<h2>Prova</h2>";
+
+    questoes.forEach((q, i)=>{
+        html += `
+        <div class="card">
+            <p>${q.pergunta}</p>
+            <input type="radio" name="q${i}" value="A"> ${q.a}<br>
+            <input type="radio" name="q${i}" value="B"> ${q.b}<br>
+            <input type="radio" name="q${i}" value="C"> ${q.c}<br>
+        </div>`;
+    });
+
+    html += `<button onclick="finalizar()">Finalizar</button>`;
+    document.getElementById("prova").innerHTML = html;
+}
+
+// ✅ FINALIZAR
 function finalizar(){
     let pontos = 0;
+    let respostas = [];
 
-    let q1 = document.querySelector('input[name="q1"]:checked');
-    let q2 = document.querySelector('input[name="q2"]:checked');
+    questoes.forEach((q, i)=>{
+        let resp = document.querySelector(`input[name="q${i}"]:checked`);
+        let val = resp ? resp.value : "N";
 
-    if(q1 && q1.value === "certo") pontos++;
-    if(q2 && q2.value === "certo") pontos++;
+        respostas.push(val);
 
-    alert("Sua nota: " + pontos);
+        if(val === q.correta) pontos++;
+    });
 
-    // Redireciona para tela final
-    window.top.location.href = "final.html";
+    respostasSalvas.push(respostas);
+    localStorage.setItem("respostas", JSON.stringify(respostasSalvas));
+
+    alert("Nota: " + pontos);
+    encerrar("Prova finalizada!");
 }
+
+// 🔐 ADMIN
+function abrirAdmin(){
+    let senha = prompt("Senha:");
+    if(senha === "prof321"){
+        document.getElementById("admin").classList.remove("hidden");
+        document.getElementById("prova").classList.add("hidden");
+        listarQuestoes();
+    }
+}
+
+// ➕ ADD QUESTÃO
+function addQuestao(){
+    let q = {
+        pergunta: document.getElementById("pergunta").value,
+        a: document.getElementById("a").value,
+        b: document.getElementById("b").value,
+        c: document.getElementById("c").value,
+        correta: document.getElementById("correta").value.toUpperCase()
+    };
+
+    questoes.push(q);
+    localStorage.setItem("questoes", JSON.stringify(questoes));
+
+    alert("Adicionado!");
+    listarQuestoes();
+}
+
+// 📋 LISTAR
+function listarQuestoes(){
+    let html = "";
+
+    questoes.forEach((q, i)=>{
+        html += `
+        <div class="card">
+            ${q.pergunta}
+            <br>
+            <button onclick="remover(${i})">Excluir</button>
+        </div>`;
+    });
+
+    document.getElementById("listaQuestoes").innerHTML = html;
+}
+
+// ❌ REMOVER
+function remover(i){
+    questoes.splice(i,1);
+    localStorage.setItem("questoes", JSON.stringify(questoes));
+    listarQuestoes();
+}
+
+// 📊 VER RESPOSTAS
+function verRespostas(){
+    document.getElementById("respostas").innerText = JSON.stringify(respostasSalvas, null, 2);
+}
+
+// 🚀 INIT
+carregarProva();
 </script>
 
 </body>
