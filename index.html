@@ -2,250 +2,64 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Sistema de Avaliação</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<title>Prova Online</title>
 
 <style>
 body {
-    margin:0;
-    font-family:'Inter',sans-serif;
-    background: linear-gradient(135deg,#0f172a,#1e293b);
-    color:#fff;
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial;
 }
 
-.topbar {
-    display:flex;
-    justify-content:space-between;
-    padding:15px 30px;
-    background:rgba(0,0,0,0.4);
+#alerta {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: red;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
 }
 
-.container {
-    max-width:900px;
-    margin:40px auto;
-    padding:25px;
-    background:rgba(255,255,255,0.05);
-    border-radius:15px;
+iframe {
+    width: 100%;
+    height: 100vh;
+    border: none;
 }
-
-.questao {
-    background:#1e293b;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-}
-
-button {
-    padding:10px 15px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    background:#2563eb;
-    color:white;
-    margin-top:10px;
-}
-
-.admin-btn { background:#16a34a; }
-
-input {
-    width:100%;
-    padding:8px;
-    margin:5px 0;
-    border-radius:5px;
-    border:none;
-}
-
-.hidden { display:none; }
 </style>
-</head>
-
-<body>
-
-<div class="topbar">
-    <span id="tempo">⏱ 600s</span>
-    <span id="alertas">⚠ 0</span>
-    <button class="admin-btn" onclick="loginAdmin()">Admin</button>
-</div>
-
-<div class="container" id="prova"></div>
-
-<div class="container hidden" id="admin">
-    <h2>Painel do Professor</h2>
-
-    <input id="pergunta" placeholder="Pergunta">
-    <input id="a" placeholder="Alternativa A">
-    <input id="b" placeholder="Alternativa B">
-    <input id="c" placeholder="Alternativa C">
-    <input id="correta" placeholder="Resposta correta (A, B ou C)">
-
-    <button onclick="addQuestao()">Adicionar Questão</button>
-    <button onclick="sairAdmin()">Voltar</button>
-
-    <h3>Questões</h3>
-    <div id="lista"></div>
-
-    <h3>Respostas</h3>
-    <button onclick="verRespostas()">Ver respostas</button>
-    <pre id="respostas"></pre>
-</div>
 
 <script>
-// ================= CONFIG =================
-let tempo = 600;
-let saidas = 0;
-let modoAdmin = false;
+// Bloquear botão direito
+document.addEventListener("contextmenu", e => e.preventDefault());
 
-// ================= DADOS =================
-let questoes = JSON.parse(localStorage.getItem("questoes")) || [];
-let respostas = JSON.parse(localStorage.getItem("respostas")) || [];
-
-// ================= TIMER =================
-setInterval(()=>{
-    if(modoAdmin) return;
-
-    tempo--;
-    tempoEl.innerText = "⏱ " + tempo + "s";
-
-    if(tempo <= 0) finalizar();
-},1000);
-
-// ================= CONTROLE DE SAÍDA =================
-document.addEventListener("visibilitychange", ()=>{
-    if(document.hidden && !modoAdmin){
-        sairDaProva();
+// Detectar saída da aba
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+        alert("⚠️ Você saiu da prova! Isso pode invalidar sua avaliação.");
     }
 });
 
-window.onblur = ()=>{
-    if(!modoAdmin){
-        sairDaProva();
-    }
+// Aviso ao tentar sair
+window.onbeforeunload = function() {
+    return "Você está em uma avaliação. Deseja sair?";
 };
 
-function sairDaProva(){
-    saidas++;
-    alertas.innerText = "⚠ " + saidas;
-    alert("Você saiu da prova!");
-    location.reload();
+// Tela cheia automática
+function entrarTelaCheia() {
+    document.documentElement.requestFullscreen();
 }
 
-// ================= PROVA =================
-function carregar(){
-    let html = "<h2>Prova</h2>";
-
-    if(questoes.length === 0){
-        html += "<p>Nenhuma questão cadastrada.</p>";
-    }
-
-    questoes.forEach((q,i)=>{
-        html += `
-        <div class="questao">
-            <p>${q.pergunta}</p>
-            <label><input type="radio" name="q${i}" value="A"> ${q.a}</label><br>
-            <label><input type="radio" name="q${i}" value="B"> ${q.b}</label><br>
-            <label><input type="radio" name="q${i}" value="C"> ${q.c}</label>
-        </div>`;
-    });
-
-    html += `<button onclick="finalizar()">Finalizar</button>`;
-    prova.innerHTML = html;
-}
-
-// ================= FINALIZAR =================
-function finalizar(){
-    let pontos = 0;
-    let resp = [];
-
-    questoes.forEach((q,i)=>{
-        let r = document.querySelector(`input[name="q${i}"]:checked`);
-        let v = r ? r.value : "-";
-
-        resp.push(v);
-        if(v === q.correta) pontos++;
-    });
-
-    respostas.push(resp);
-    localStorage.setItem("respostas", JSON.stringify(respostas));
-
-    alert("Nota: " + pontos);
-    location.reload();
-}
-
-// ================= ADMIN =================
-function loginAdmin(){
-    let senha = prompt("Senha:");
-    if(senha === "prof321"){
-        modoAdmin = true;
-        admin.classList.remove("hidden");
-        prova.classList.add("hidden");
-        listar();
-    }
-}
-
-function sairAdmin(){
-    modoAdmin = false;
-    admin.classList.add("hidden");
-    prova.classList.remove("hidden");
-}
-
-// ================= QUESTÕES =================
-function addQuestao(){
-    let q = {
-        pergunta: pergunta.value,
-        a: a.value,
-        b: b.value,
-        c: c.value,
-        correta: correta.value.toUpperCase()
-    };
-
-    if(!q.pergunta) return alert("Digite a pergunta");
-
-    questoes.push(q);
-    localStorage.setItem("questoes", JSON.stringify(questoes));
-
-    pergunta.value = a.value = b.value = c.value = correta.value = "";
-    listar();
-}
-
-function listar(){
-    let html = "";
-
-    questoes.forEach((q,i)=>{
-        html += `
-        <div class="questao">
-            ${q.pergunta}
-            <br>
-            <button onclick="remover(${i})">Excluir</button>
-        </div>`;
-    });
-
-    lista.innerHTML = html;
-}
-
-function remover(i){
-    questoes.splice(i,1);
-    localStorage.setItem("questoes", JSON.stringify(questoes));
-    listar();
-}
-
-// ================= RESPOSTAS =================
-function verRespostas(){
-    respostasEl.innerText = JSON.stringify(respostas, null, 2);
-}
-
-// ================= INIT =================
-const tempoEl = document.getElementById("tempo");
-const alertas = document.getElementById("alertas");
-const prova = document.getElementById("prova");
-const admin = document.getElementById("admin");
-const lista = document.getElementById("lista");
-const respostasEl = document.getElementById("respostas");
-
-carregar();
 </script>
+</head>
+
+<body onload="entrarTelaCheia()">
+
+<div id="alerta">
+⚠️ PROVA EM ANDAMENTO - NÃO SAIA DA TELA
+</div>
+
+<iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=1JjG0Ork6U6nnfLXp4OZyAkLBLNSedNApafS5DptQ_BUOUZGSERQT0RDWlVUMldRVU1OTEQ0REpMNy4u"></iframe>
 
 </body>
 </html>
