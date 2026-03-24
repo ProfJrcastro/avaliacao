@@ -11,97 +11,62 @@
 <style>
 body {
     margin:0;
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    font-family:'Inter',sans-serif;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
     color:#fff;
 }
 
-/* TOPO */
 .topbar {
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    padding:15px 30px;
     display:flex;
     justify-content:space-between;
-    align-items:center;
+    padding:15px 30px;
+    background:rgba(0,0,0,0.4);
 }
 
-/* CONTAINER */
 .container {
     max-width:900px;
     margin:40px auto;
     padding:25px;
-    background: rgba(255,255,255,0.05);
+    background:rgba(255,255,255,0.05);
     border-radius:15px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-/* QUESTÕES */
 .questao {
     background:#1e293b;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
-    transition:0.3s;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
 }
 
-.questao:hover {
-    transform: scale(1.01);
-}
-
-/* BOTÕES */
 button {
-    background: linear-gradient(135deg,#2563eb,#3b82f6);
+    padding:10px 15px;
     border:none;
-    padding:12px 18px;
-    color:white;
-    border-radius:8px;
+    border-radius:6px;
     cursor:pointer;
-    font-weight:600;
-    transition:0.3s;
+    background:#2563eb;
+    color:white;
+    margin-top:10px;
 }
 
-button:hover {
-    transform: translateY(-2px);
-}
+.admin-btn { background:#16a34a; }
 
-/* INPUT */
 input {
     width:100%;
-    padding:10px;
-    margin:6px 0;
-    border-radius:6px;
+    padding:8px;
+    margin:5px 0;
+    border-radius:5px;
     border:none;
 }
 
-/* ADMIN */
 .hidden { display:none; }
-
-.admin-btn {
-    background:#16a34a;
-}
-
-/* TÍTULOS */
-h2 {
-    margin-bottom:20px;
-    font-weight:600;
-}
-
-/* RADIO */
-label {
-    display:block;
-    margin:6px 0;
-    cursor:pointer;
-}
 </style>
 </head>
 
 <body>
 
 <div class="topbar">
-    <div id="tempo">⏱ 600s</div>
-    <div id="alertas">⚠ 0</div>
+    <span id="tempo">⏱ 600s</span>
+    <span id="alertas">⚠ 0</span>
     <button class="admin-btn" onclick="loginAdmin()">Admin</button>
 </div>
 
@@ -116,44 +81,58 @@ label {
     <input id="c" placeholder="Alternativa C">
     <input id="correta" placeholder="Resposta correta (A, B ou C)">
 
-    <button onclick="addQuestao()">Adicionar</button>
+    <button onclick="addQuestao()">Adicionar Questão</button>
+    <button onclick="sairAdmin()">Voltar</button>
 
     <h3>Questões</h3>
     <div id="lista"></div>
 
     <h3>Respostas</h3>
-    <button onclick="verRespostas()">Ver</button>
+    <button onclick="verRespostas()">Ver respostas</button>
     <pre id="respostas"></pre>
 </div>
 
 <script>
+// ================= CONFIG =================
 let tempo = 600;
 let saidas = 0;
+let modoAdmin = false;
+
+// ================= DADOS =================
 let questoes = JSON.parse(localStorage.getItem("questoes")) || [];
 let respostas = JSON.parse(localStorage.getItem("respostas")) || [];
 
-// TIMER
+// ================= TIMER =================
 setInterval(()=>{
+    if(modoAdmin) return;
+
     tempo--;
     tempoEl.innerText = "⏱ " + tempo + "s";
 
     if(tempo <= 0) finalizar();
 },1000);
 
-// SAÍDA
+// ================= CONTROLE DE SAÍDA =================
 document.addEventListener("visibilitychange", ()=>{
-    if(document.hidden){
-        saidas++;
-        alertas.innerText = "⚠ " + saidas;
-
-        if(saidas >= 1){
-            alert("Prova reiniciada!");
-            location.reload();
-        }
+    if(document.hidden && !modoAdmin){
+        sairDaProva();
     }
 });
 
-// PROVA
+window.onblur = ()=>{
+    if(!modoAdmin){
+        sairDaProva();
+    }
+};
+
+function sairDaProva(){
+    saidas++;
+    alertas.innerText = "⚠ " + saidas;
+    alert("Você saiu da prova!");
+    location.reload();
+}
+
+// ================= PROVA =================
 function carregar(){
     let html = "<h2>Prova</h2>";
 
@@ -165,8 +144,8 @@ function carregar(){
         html += `
         <div class="questao">
             <p>${q.pergunta}</p>
-            <label><input type="radio" name="q${i}" value="A"> ${q.a}</label>
-            <label><input type="radio" name="q${i}" value="B"> ${q.b}</label>
+            <label><input type="radio" name="q${i}" value="A"> ${q.a}</label><br>
+            <label><input type="radio" name="q${i}" value="B"> ${q.b}</label><br>
             <label><input type="radio" name="q${i}" value="C"> ${q.c}</label>
         </div>`;
     });
@@ -175,7 +154,7 @@ function carregar(){
     prova.innerHTML = html;
 }
 
-// FINALIZAR
+// ================= FINALIZAR =================
 function finalizar(){
     let pontos = 0;
     let resp = [];
@@ -195,17 +174,24 @@ function finalizar(){
     location.reload();
 }
 
-// ADMIN
+// ================= ADMIN =================
 function loginAdmin(){
-    let s = prompt("Senha:");
-    if(s === "prof321"){
+    let senha = prompt("Senha:");
+    if(senha === "prof321"){
+        modoAdmin = true;
         admin.classList.remove("hidden");
         prova.classList.add("hidden");
         listar();
     }
 }
 
-// ADD
+function sairAdmin(){
+    modoAdmin = false;
+    admin.classList.add("hidden");
+    prova.classList.remove("hidden");
+}
+
+// ================= QUESTÕES =================
 function addQuestao(){
     let q = {
         pergunta: pergunta.value,
@@ -215,14 +201,18 @@ function addQuestao(){
         correta: correta.value.toUpperCase()
     };
 
+    if(!q.pergunta) return alert("Digite a pergunta");
+
     questoes.push(q);
     localStorage.setItem("questoes", JSON.stringify(questoes));
+
+    pergunta.value = a.value = b.value = c.value = correta.value = "";
     listar();
 }
 
-// LISTAR
 function listar(){
     let html = "";
+
     questoes.forEach((q,i)=>{
         html += `
         <div class="questao">
@@ -231,22 +221,29 @@ function listar(){
             <button onclick="remover(${i})">Excluir</button>
         </div>`;
     });
+
     lista.innerHTML = html;
 }
 
-// REMOVER
 function remover(i){
     questoes.splice(i,1);
     localStorage.setItem("questoes", JSON.stringify(questoes));
     listar();
 }
 
-// RESPOSTAS
+// ================= RESPOSTAS =================
 function verRespostas(){
-    respostas.innerText = JSON.stringify(respostas, null, 2);
+    respostasEl.innerText = JSON.stringify(respostas, null, 2);
 }
 
-// INIT
+// ================= INIT =================
+const tempoEl = document.getElementById("tempo");
+const alertas = document.getElementById("alertas");
+const prova = document.getElementById("prova");
+const admin = document.getElementById("admin");
+const lista = document.getElementById("lista");
+const respostasEl = document.getElementById("respostas");
+
 carregar();
 </script>
 
