@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -33,26 +34,26 @@ iframe {
     <span id="alertas">Saídas: 0</span>
 </div>
 
-<!-- 🔥 COLOQUE AQUI O LINK REAL -->
-<iframe src="https://docs.google.com/forms/d/e/SEU_FORM/viewform"></iframe>
+<!-- 🔥 CARREGA A PROVA LOCAL (SEM ERRO 404) -->
+<iframe src="prova.html"></iframe>
 
 <script>
 let saidas = 0;
 let tempo = 600;
-let bloqueio = false; // evita loop
+let bloqueio = false;
 
-// ⏱ Timer
+// ⏱ TIMER
 setInterval(()=>{
     tempo--;
     document.getElementById('tempo').innerText = "Tempo: " + tempo + "s";
 
     if(tempo <= 0){
         alert("Tempo encerrado!");
-        window.location.href = "about:blank"; // evita erro 404
+        window.location.href = "final.html";
     }
 },1000);
 
-// 🚫 Segurança básica
+// 🚫 BLOQUEIOS
 document.addEventListener('copy', e => e.preventDefault());
 document.addEventListener('paste', e => e.preventDefault());
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -61,7 +62,7 @@ document.addEventListener('keydown', function(e) {
     if (e.ctrlKey) e.preventDefault();
 });
 
-// 👀 Monitoramento corrigido
+// 👀 MONITORAMENTO
 document.addEventListener("visibilitychange", function() {
     if (document.hidden && !bloqueio) penalizar();
 });
@@ -71,7 +72,7 @@ window.onblur = function(){
 };
 
 function penalizar(){
-    bloqueio = true; // trava repetição
+    bloqueio = true;
 
     saidas++;
     document.getElementById("alertas").innerText = "Saídas: " + saidas;
@@ -80,10 +81,10 @@ function penalizar(){
 
     if(saidas >= 2){
         alert("Prova encerrada!");
-        window.location.href = "about:blank";
+        window.location.href = "final.html";
     }
 
-    setTimeout(() => bloqueio = false, 2000); // libera depois
+    setTimeout(() => bloqueio = false, 2000);
 }
 </script>
 
