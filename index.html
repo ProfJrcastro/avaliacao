@@ -6,70 +6,93 @@
 
 <title>Sistema de Avaliação</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
 <style>
 body {
     margin:0;
-    font-family: Arial;
-    background:#0f172a;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
     color:#fff;
 }
 
 /* TOPO */
 .topbar {
-    background:#020617;
-    padding:15px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    padding:15px 30px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    font-weight:bold;
 }
 
-/* CONTEÚDO */
+/* CONTAINER */
 .container {
-    max-width:800px;
-    margin:30px auto;
-    background:#1e293b;
-    padding:20px;
-    border-radius:10px;
-}
-
-/* BOTÕES */
-button {
-    background:#2563eb;
-    border:none;
-    padding:10px 15px;
-    color:white;
-    border-radius:5px;
-    cursor:pointer;
-    margin-top:10px;
-}
-
-button:hover {
-    background:#1d4ed8;
+    max-width:900px;
+    margin:40px auto;
+    padding:25px;
+    background: rgba(255,255,255,0.05);
+    border-radius:15px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 /* QUESTÕES */
 .questao {
-    background:#334155;
-    padding:15px;
-    margin:15px 0;
+    background:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    transition:0.3s;
+}
+
+.questao:hover {
+    transform: scale(1.01);
+}
+
+/* BOTÕES */
+button {
+    background: linear-gradient(135deg,#2563eb,#3b82f6);
+    border:none;
+    padding:12px 18px;
+    color:white;
     border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
 }
 
 /* INPUT */
 input {
     width:100%;
-    padding:8px;
-    margin:5px 0;
-    border-radius:5px;
+    padding:10px;
+    margin:6px 0;
+    border-radius:6px;
     border:none;
 }
 
-/* ESCONDER */
+/* ADMIN */
 .hidden { display:none; }
 
 .admin-btn {
     background:#16a34a;
+}
+
+/* TÍTULOS */
+h2 {
+    margin-bottom:20px;
+    font-weight:600;
+}
+
+/* RADIO */
+label {
+    display:block;
+    margin:6px 0;
+    cursor:pointer;
 }
 </style>
 </head>
@@ -77,8 +100,8 @@ input {
 <body>
 
 <div class="topbar">
-    <span id="tempo">Tempo: 600s</span>
-    <span id="alertas">Saídas: 0</span>
+    <div id="tempo">⏱ 600s</div>
+    <div id="alertas">⚠ 0</div>
     <button class="admin-btn" onclick="loginAdmin()">Admin</button>
 </div>
 
@@ -87,19 +110,19 @@ input {
 <div class="container hidden" id="admin">
     <h2>Painel do Professor</h2>
 
-    <input id="pergunta" placeholder="Digite a pergunta">
+    <input id="pergunta" placeholder="Pergunta">
     <input id="a" placeholder="Alternativa A">
     <input id="b" placeholder="Alternativa B">
     <input id="c" placeholder="Alternativa C">
     <input id="correta" placeholder="Resposta correta (A, B ou C)">
 
-    <button onclick="addQuestao()">Adicionar Questão</button>
+    <button onclick="addQuestao()">Adicionar</button>
 
     <h3>Questões</h3>
     <div id="lista"></div>
 
     <h3>Respostas</h3>
-    <button onclick="verRespostas()">Ver respostas</button>
+    <button onclick="verRespostas()">Ver</button>
     <pre id="respostas"></pre>
 </div>
 
@@ -112,60 +135,57 @@ let respostas = JSON.parse(localStorage.getItem("respostas")) || [];
 // TIMER
 setInterval(()=>{
     tempo--;
-    document.getElementById("tempo").innerText = "Tempo: " + tempo + "s";
+    tempoEl.innerText = "⏱ " + tempo + "s";
 
-    if(tempo <= 0){
-        finalizarProva();
-    }
+    if(tempo <= 0) finalizar();
 },1000);
 
-// MONITORAMENTO SIMPLES
+// SAÍDA
 document.addEventListener("visibilitychange", ()=>{
     if(document.hidden){
         saidas++;
-        document.getElementById("alertas").innerText = "Saídas: " + saidas;
-        alert("Você saiu da prova!");
+        alertas.innerText = "⚠ " + saidas;
 
         if(saidas >= 1){
+            alert("Prova reiniciada!");
             location.reload();
         }
     }
 });
 
-// GERAR PROVA
-function carregarProva(){
+// PROVA
+function carregar(){
     let html = "<h2>Prova</h2>";
 
     if(questoes.length === 0){
         html += "<p>Nenhuma questão cadastrada.</p>";
     }
 
-    questoes.forEach((q, i)=>{
+    questoes.forEach((q,i)=>{
         html += `
         <div class="questao">
             <p>${q.pergunta}</p>
-            <label><input type="radio" name="q${i}" value="A"> ${q.a}</label><br>
-            <label><input type="radio" name="q${i}" value="B"> ${q.b}</label><br>
+            <label><input type="radio" name="q${i}" value="A"> ${q.a}</label>
+            <label><input type="radio" name="q${i}" value="B"> ${q.b}</label>
             <label><input type="radio" name="q${i}" value="C"> ${q.c}</label>
         </div>`;
     });
 
-    html += `<button onclick="finalizarProva()">Finalizar</button>`;
-
-    document.getElementById("prova").innerHTML = html;
+    html += `<button onclick="finalizar()">Finalizar</button>`;
+    prova.innerHTML = html;
 }
 
 // FINALIZAR
-function finalizarProva(){
+function finalizar(){
     let pontos = 0;
     let resp = [];
 
     questoes.forEach((q,i)=>{
         let r = document.querySelector(`input[name="q${i}"]:checked`);
-        let val = r ? r.value : "-";
-        resp.push(val);
+        let v = r ? r.value : "-";
 
-        if(val === q.correta) pontos++;
+        resp.push(v);
+        if(v === q.correta) pontos++;
     });
 
     respostas.push(resp);
@@ -175,17 +195,17 @@ function finalizarProva(){
     location.reload();
 }
 
-// ADMIN LOGIN
+// ADMIN
 function loginAdmin(){
-    let senha = prompt("Senha:");
-    if(senha === "prof321"){
-        document.getElementById("admin").classList.remove("hidden");
-        document.getElementById("prova").classList.add("hidden");
+    let s = prompt("Senha:");
+    if(s === "prof321"){
+        admin.classList.remove("hidden");
+        prova.classList.add("hidden");
         listar();
     }
 }
 
-// ADD QUESTÃO
+// ADD
 function addQuestao(){
     let q = {
         pergunta: pergunta.value,
@@ -195,19 +215,14 @@ function addQuestao(){
         correta: correta.value.toUpperCase()
     };
 
-    if(!q.pergunta) return alert("Preencha a pergunta");
-
     questoes.push(q);
     localStorage.setItem("questoes", JSON.stringify(questoes));
-
-    alert("Questão adicionada!");
     listar();
 }
 
 // LISTAR
 function listar(){
     let html = "";
-
     questoes.forEach((q,i)=>{
         html += `
         <div class="questao">
@@ -216,8 +231,7 @@ function listar(){
             <button onclick="remover(${i})">Excluir</button>
         </div>`;
     });
-
-    document.getElementById("lista").innerHTML = html;
+    lista.innerHTML = html;
 }
 
 // REMOVER
@@ -227,14 +241,13 @@ function remover(i){
     listar();
 }
 
-// VER RESPOSTAS
+// RESPOSTAS
 function verRespostas(){
-    document.getElementById("respostas").innerText =
-        JSON.stringify(respostas, null, 2);
+    respostas.innerText = JSON.stringify(respostas, null, 2);
 }
 
 // INIT
-carregarProva();
+carregar();
 </script>
 
 </body>
