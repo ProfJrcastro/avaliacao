@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+}
+
+.topbar {
+    background:#111827;
+    padding:10px;
+    display:flex;
+    justify-content:space-between;
+}
+
+iframe {
+    width:100%;
+    height:90vh;
+    border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <span id="tempo">Tempo: 0</span>
+    <span id="alertas">Saídas: 0</span>
+</div>
+
+<iframe src="COLE_AQUI_LINK_DA_PROVA"></iframe>
+
+<script>
+let saidas = 0;
+let tempo = 600;
+
+// ⏱ Timer
+setInterval(()=>{
+    tempo--;
+    document.getElementById('tempo').innerText = "Tempo: " + tempo + "s";
+
+    if(tempo <= 0){
+        alert("Tempo encerrado!");
+        location.reload();
+    }
+},1000);
+
+// 🚫 Segurança geral
+document.addEventListener('copy', e => e.preventDefault());
+document.addEventListener('paste', e => e.preventDefault());
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey) e.preventDefault();
+});
+
+// 👀 Monitoramento
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) penalizar();
+});
+
+window.onblur = function(){ penalizar(); }
+
+function penalizar(){
+    saidas++;
+    document.getElementById("alertas").innerText = "Saídas: " + saidas;
+
+    alert("Você saiu da prova!");
+
+    if(saidas >= 2){
+        alert("Prova encerrada!");
+        location.reload();
+    }
+}
+</script>
+
+</body>
+</html>
