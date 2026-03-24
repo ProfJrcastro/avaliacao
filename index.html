@@ -20,6 +20,7 @@ body {
     text-align: center;
     padding: 10px;
     font-weight: bold;
+    z-index: 999;
 }
 
 iframe {
@@ -30,15 +31,36 @@ iframe {
 </style>
 
 <script>
+
+// Controle de saída
+let saiuDaProva = false;
+
 // Bloquear botão direito
 document.addEventListener("contextmenu", e => e.preventDefault());
 
-// Detectar saída da aba
+// Detectar troca de aba
 document.addEventListener("visibilitychange", function() {
     if (document.hidden) {
-        alert("⚠️ Você saiu da prova! Isso pode invalidar sua avaliação.");
+        saiuDaProva = true;
+    } else {
+        if (saiuDaProva) {
+            alert("⚠️ Você saiu da prova! A avaliação será reiniciada.");
+            location.reload(); // REINICIA A PROVA
+        }
     }
 });
+
+// Detectar mudança de janela (alt+tab, minimizar)
+window.onblur = function() {
+    saiuDaProva = true;
+};
+
+window.onfocus = function() {
+    if (saiuDaProva) {
+        alert("⚠️ Você saiu da prova! A avaliação será reiniciada.");
+        location.reload();
+    }
+};
 
 // Aviso ao tentar sair
 window.onbeforeunload = function() {
@@ -47,7 +69,9 @@ window.onbeforeunload = function() {
 
 // Tela cheia automática
 function entrarTelaCheia() {
-    document.documentElement.requestFullscreen();
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    }
 }
 
 </script>
@@ -56,7 +80,7 @@ function entrarTelaCheia() {
 <body onload="entrarTelaCheia()">
 
 <div id="alerta">
-⚠️ PROVA EM ANDAMENTO - NÃO SAIA DA TELA
+🚫 PROVA EM ANDAMENTO - SAIR DA TELA IRÁ REINICIAR A AVALIAÇÃO
 </div>
 
 <iframe src="https://forms.office.com/Pages/ResponsePage.aspx?id=1JjG0Ork6U6nnfLXp4OZyAkLBLNSedNApafS5DptQ_BUOUZGSERQT0RDWlVUMldRVU1OTEQ0REpMNy4u"></iframe>
