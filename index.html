@@ -29,15 +29,17 @@ iframe {
 <body>
 
 <div class="topbar">
-    <span id="tempo">Tempo: 0</span>
+    <span id="tempo">Tempo: 600s</span>
     <span id="alertas">Saídas: 0</span>
 </div>
 
-<iframe src="COLE_AQUI_LINK_DA_PROVA"></iframe>
+<!-- 🔥 COLOQUE AQUI O LINK REAL -->
+<iframe src="https://docs.google.com/forms/d/e/SEU_FORM/viewform"></iframe>
 
 <script>
 let saidas = 0;
 let tempo = 600;
+let bloqueio = false; // evita loop
 
 // ⏱ Timer
 setInterval(()=>{
@@ -46,11 +48,11 @@ setInterval(()=>{
 
     if(tempo <= 0){
         alert("Tempo encerrado!");
-        location.reload();
+        window.location.href = "about:blank"; // evita erro 404
     }
 },1000);
 
-// 🚫 Segurança geral
+// 🚫 Segurança básica
 document.addEventListener('copy', e => e.preventDefault());
 document.addEventListener('paste', e => e.preventDefault());
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -59,14 +61,18 @@ document.addEventListener('keydown', function(e) {
     if (e.ctrlKey) e.preventDefault();
 });
 
-// 👀 Monitoramento
+// 👀 Monitoramento corrigido
 document.addEventListener("visibilitychange", function() {
-    if (document.hidden) penalizar();
+    if (document.hidden && !bloqueio) penalizar();
 });
 
-window.onblur = function(){ penalizar(); }
+window.onblur = function(){
+    if(!bloqueio) penalizar();
+};
 
 function penalizar(){
+    bloqueio = true; // trava repetição
+
     saidas++;
     document.getElementById("alertas").innerText = "Saídas: " + saidas;
 
@@ -74,8 +80,10 @@ function penalizar(){
 
     if(saidas >= 2){
         alert("Prova encerrada!");
-        location.reload();
+        window.location.href = "about:blank";
     }
+
+    setTimeout(() => bloqueio = false, 2000); // libera depois
 }
 </script>
 
